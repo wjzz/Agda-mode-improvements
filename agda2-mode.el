@@ -1199,6 +1199,44 @@ a custom separator sep, if given."
  (buffer-substring-no-properties (+ (overlay-start o) 2)
                                  (- (overlay-end   o) 2)))
 
+(defun agda2-split-names (names)
+  ;; does name begin with '-' or a digit?
+  ;; [digits are for handling -t 10, but this is ugly
+  ;; and will break soon]
+  (flet
+      ((predicate (name) (string-match "^[-0-9]" name)))
+           
+    ;; split names into auto options and names of db's
+    (list (remove-if-not 'predicate names)
+          (remove-if     'predicate names))))
+
+; (agda2-split-names (list "hello" "t-" "-t" "10"))
+
+(defun agda2-build-hints ()
+  (let* 
+      ((dbs      (agda2-extract-dbs-from-buffer))
+       (goal-txt (agda2-read-txt-from-goal))
+       (names    (split-string goal-txt))
+
+       ;; split names into two groups: options and names of dbs
+       (splitted     (agda2-split-names names))
+       (auto-options (first splitted))
+       (db-names     (or (second splitted)  ;; if second splitted is empty, 
+                         (list "global")))  ;; use the global db
+       
+       ;; this could be easily optimized, by generalizing
+       ;; agda2-get-db-contents to work for many dbs
+       ;; i.e. change agda2-get-db-contents      :: String -> DBS -> [String]
+       ;; into        agda2-get-db-contents-many :: [String] -> DBS -> [String]
+       (theorems (apply 'append (mapcar (lambda (db-name) 
+                                              (agda2-get-db-contents db-name dbs))
+                                            db-names)))
+                                                      
+       (hints    (agda2-list-to-string-with-sep (append auto-options
+                                                        theorems))))
+    hints))
+  
+
 ;; need to make sure we're in a goal
 (defun agda2-solve-with-db ()
   "Reads the name of the db from the current goal input field,
@@ -1207,16 +1245,8 @@ and calls auto with the theorems from the db as hints."
   (multiple-value-bind (o g) (agda2-goal-at (point))
     (unless g (error "For this command, please place the cursor in a goal"))
     
-    (let* ((dbs      (agda2-extract-dbs-from-buffer))
-           (goal-txt (agda2-read-txt-from-goal))
-           (db-name  (if (string-match "^[ \t\n]*$" goal-txt) 
-                         "global" 
-                         goal-txt))
-           (theorems (agda2-get-db-contents db-name dbs))
-           (hints    (agda2-list-to-string-with-sep theorems)))
-
-      ;; debuging
-      (print goal-txt)
+    (let
+        ((hints (agda2-build-hints)))
 
       ;; an ugly boundary case:
       ;;  if the cursor is at { in the goal, then insert will put the text before it,

@@ -35,9 +35,10 @@ Installation
 ============
 
 All you need to do is to replace the agda2-mode.el file with the version
-from my repository/attached to the e-mail. To locate the directory in
-which you emacs-file files for agda-mode type
-$ agda-mode locate
+from my repository:
+https://github.com/wjzz/Agda-mode-improvements
+To locate the directory with the emacs-lisp files for agda-mode type:
+ agda-mode locate
 in your terminal.
 
 ===============================
@@ -46,8 +47,8 @@ Using the auto-with-dbs feature
 
 To use auto with a given database(s) you have to:
 1) place the cursor in a goal
-2) type the name(s) of the database(s) you want to use (you can also use the standard
-agsy options, such as -c and -t 10, at the same time)
+2) type the name(s) of the database(s) you want to use (this can be combined with 
+the standard agsy options, such as -c and -t 10)
 3) enter C-u C-c C-a    (this will invoke the agda2-solve-with-db function)
 
 For examples please look below.
@@ -60,15 +61,15 @@ will be inserted in place of the goal automatically (just as will normal auto),
 if not then the lists of hints will show up in the goal (if this behavior will
 prove inconvenient I will change it).
 
-====================================================
-Creating databases and adding theorems/lemma to them
-====================================================
+=====================================================
+Creating databases and adding theorems/lemmas to them
+=====================================================
 
 Databases do not have to be declared. All you need to do is to insert
 a comment of the form: 
 {- BASE name-of-database lemma_1 lemma_2 ... lemma_n -}
 
-anywhere in the Agda source file that you want to use auto-with-dbs.
+in the Agda source file that you want to use auto-with-dbs with.
 The declaration should be placed below the proofs of the lemmas (otherwise
 you will get an 'unknown name error'). The name of the database can be
 any string not starting with a digit or the '-' character. Theorems can be
@@ -78,11 +79,15 @@ only special thing about it is that if no name will be inputed in the goal
 and the agda2-solve-with-db action will be run (with C-u C-c C-a) then
 the db called "global" will be used.
 
+For now, the databases are local to a file and have to be written in every
+file. If the whole feature will prove useful, I will try to desing a more
+modular solution.
+
 =======================
 auto-with-dbs in action
 =======================
 
-Let's try to prove that addition of natural numbers if commutative using some
+Let's try to prove that addition on natural numbers is commutative using some
 automations. We will need two lemmas two prove on the way.
 
 We'll need nats, ≡ and some properties of the equality.
@@ -105,7 +110,7 @@ lem-0 n = {!!}
 
 \end{code}
 
-This goal can't be solve by auto, as a case analysis is needed.
+This goal can't be solved by auto, as a case analysis is needed.
 We can try to enter -c -t 15 into the goal and run auto, but still it won't be solved.
 If we go ahead to prove lem-0 by hand we'll notice that the zero case is trivial, but
 in the suc n case we need to go from 
@@ -138,11 +143,11 @@ lem-0-r n = {!!}
 
 \end{code}
 
-Go the the above goal, type -c global and press C-u C-c C-a. Voila!
+Go the the above goal, type '-c global' and press C-u C-c C-a. Voila!
 Actualy, since we're using the global database, you may shorten '-c global'
 just to '-c'!
 
-Now that we are done with this lemma, we can add to some databases,
+Now that we are done with this lemma, we can add it to some databases,
 for example: 
 
 \begin{code}
@@ -153,11 +158,11 @@ for example:
 \end{code}
 
 So at this point the global db will use cong, trans, sym and lem
-while arith has only lem.
+while arith consists only of lem.
 
 Now it's time for the second lemma. We won't go into details this time,
 it suffices to mention that we need to use induction/recursion on n and
-again wrap the recursive call with cong suc. So we can again solve it by
+once again wrap the recursive call with cong suc. So we can again solve it by
 typing '-c' and C-u C-c C-a. 
 
 \begin{code}
@@ -167,17 +172,18 @@ lem-suc-n-m n m = {!!}
 
 \end{code}
 
+Did it work?
+
 !Important!
 
-If at this place you get an error about inistantiated metariables or (if 
-you make a case analyze by hand on n the standard way (C-c C-c) and try
-to use the auto-with-dbs in a subgoal) an internal error message make sure
-that you have proven the lem-0-r lemma. 
-It seems that auto can't work with unfinised lemmas, so be sure to
- add only completed ones to the databases.
+If at this place you get an error about inistantiated metavariables or an 
+internal error message (this happens when you make a case analyze by hand 
+on n the standard way (C-c C-c) and try to use the auto-with-dbs in a subgoal)
+make sure that you have proven the lem-0-r lemma. It seems that auto can't work 
+with incomplete lemmas, so be sure to  add only completed ones to the databases.
 
-Now that we've proven all the necessary helper lemmas let's add it to the
-dbs and prove the final theorem.
+Now, that we've proven all the necessary helper lemmas, let's add it to the
+global db and prove the final theorem.
 
 \begin{code}
 
@@ -188,7 +194,7 @@ lem-comm n m = {!!}
 
 \end{code}
 
-If you tried the same '-c' and then C-u C-c C-a trick you might be a little
+If you try the same '-c' and then C-u C-c C-a trick you might be a little
 surprised by the generated term:
 
 \begin{code}
@@ -203,8 +209,8 @@ The term in the zero case can of course be simplified to
 lem3 zero m = sym (lem-0-r m)
 
 I know of one way to generate the clean version:
-1) perform a manual case analysis on n and then do
-C-u C-c C-a once on each goal (you don't have to input anything inside the goal)
+* perform a manual case analysis on n and then do
+  C-u C-c C-a once on each goal (you don't have to input anything inside the goal)
 
 I tried to swap cong and sym in the very first db declaration of this file to change the order
 in which hints are processed by auto, but then we get

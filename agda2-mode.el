@@ -1160,8 +1160,16 @@ the argument is a positive number, otherwise turn it off."
 (defun agda2-extract-dbs-from-buffer ()
   (interactive)
   "Travels the whole buffer and looks for db declarations.
-A db declaration is a comment of form \s*{- BASE name-of-db theorem-name+ -}
-"
+A db declaration is a comment of form 
+{- BASE name-of-db theorem-name* -}
+db declaration can mention the same database many times in a file
+and all listed theorems will be merged and included in the result."
+
+;; TODO
+;; Currently, we include declarations from the whole file,
+;; but it is bad to use in goal G a theorem that is proved
+;; later in the file than G appears. Ideally we should
+;; include a boundary. the bound option in re-search-forward seems to be able to do the job.
 (let (start end results)
   (save-excursion
     (goto-char (point-min))
@@ -1173,19 +1181,27 @@ A db declaration is a comment of form \s*{- BASE name-of-db theorem-name+ -}
         (push (split-string (substring-no-properties (buffer-string) start end)) results)))
     results)))
 
-(defun agda2-get-db-contents (db-name all-dbs)
-  "Iterates the all-dbs list and returns a list of all
-theorems from the db named db-name. The all-dbs can contain lists with
-duplicate heads (= names of dbs) - all results will we combined."
+(defun agda2-get-db-contents-many (db-names all-dbs)
+  "Iterates through the all-dbs list and collects the theorems
+from all databases with their names in the db-names list.
+
+db-names should be a list of strings ;
+all-dbs should be a list of list of strings, where
+the first element of each list is the name of db and
+the rest are the names of the theorems included in the given db."
   (let (results)
     (dolist (db all-dbs results)
       (when (and db
-                 (string-equal db-name (first db)))
+                 (member-if (lambda (db-name)
+                              (string-equal db-name 
+                                            (first db)))
+                            db-names))
         (setq results (append results 
                               (rest db)))))))
 
+
 (defun agda2-list-to-string-with-sep (l &optional sep)
-  "An invert to split-sting. Joines a list of string with a single space or
+  "An invert to split-sting. Joins a list of strings with a single space or
 a custom separator sep, if given."
   (unless sep
     (setf sep " "))
@@ -1196,13 +1212,21 @@ a custom separator sep, if given."
 
 ;; extracted from agda2-goal-cmd
 (defun agda2-read-txt-from-goal ()
+  "Returns the text inputed in the current goal."
  (buffer-substring-no-properties (+ (overlay-start o) 2)
                                  (- (overlay-end   o) 2)))
 
 (defun agda2-split-names (names)
-  ;; does name begin with '-' or a digit?
-  ;; [digits are for handling -t 10, but this is ugly
-  ;; and will break soon]
+  "Given a list of strings (the current goal's input splitted)
+partitions it into two groups:
+ 1) options to auto (ie. -c -t 10 ...)
+ 2) names of databases
+The result is given as list of length 2."
+
+  ;; currently we pick everything that starts with
+  ;; a '-' or digit to be an option
+  ;; and anything else to be a db name
+  ;; Is it good enough?
   (flet
       ((predicate (name) (string-match "^[-0-9]" name)))
            
@@ -1212,7 +1236,11 @@ a custom separator sep, if given."
 
 ; (agda2-split-names (list "hello" "t-" "-t" "10"))
 
+
 (defun agda2-build-hints ()
+  "Searches the file for database declarations, read a list of chosen data-bases
+(and auto options, if given) from the current goal's input and returns a string
+that is ready to be given to auto as hints."
   (let* 
       ((dbs      (agda2-extract-dbs-from-buffer))
        (goal-txt (agda2-read-txt-from-goal))
@@ -1224,13 +1252,7 @@ a custom separator sep, if given."
        (db-names     (or (second splitted)  ;; if second splitted is empty, 
                          (list "global")))  ;; use the global db
        
-       ;; this could be easily optimized, by generalizing
-       ;; agda2-get-db-contents to work for many dbs
-       ;; i.e. change agda2-get-db-contents      :: String -> DBS -> [String]
-       ;; into        agda2-get-db-contents-many :: [String] -> DBS -> [String]
-       (theorems (apply 'append (mapcar (lambda (db-name) 
-                                              (agda2-get-db-contents db-name dbs))
-                                            db-names)))
+       (theorems (agda2-get-db-contents-many db-names dbs))
                                                       
        (hints    (agda2-list-to-string-with-sep (append auto-options
                                                         theorems))))

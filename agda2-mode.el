@@ -1164,18 +1164,13 @@ A db declaration is a comment of form
 {- BASE name-of-db theorem-name* -}
 db declaration can mention the same database many times in a file
 and all listed theorems will be merged and included in the result."
-
-;; TODO
-;; Currently, we include declarations from the whole file,
-;; but it is bad to use in goal G a theorem that is proved
-;; later in the file than G appears. Ideally we should
-;; include a boundary. the bound option in re-search-forward seems to be able to do the job.
-(let (start end results)
+(let ((end-boundary (point))
+      start end results)
   (save-excursion
     (goto-char (point-min))
     (while (setq start 
-                 (re-search-forward "{- BASE" nil t))
-      (when (re-search-forward " -}" nil t)
+                 (re-search-forward "{- BASE" end-boundary t))
+      (when (re-search-forward " -}" end-boundary t)
         (setq end (match-beginning 0))
         (decf end)
         (push (split-string (substring-no-properties (buffer-string) start end)) results)))
@@ -1196,8 +1191,29 @@ the rest are the names of the theorems included in the given db."
                               (string-equal db-name 
                                             (first db)))
                             db-names))
-        (setq results (append results 
-                              (rest db)))))))
+        (setq results (append (rest db)
+                              results))))))
+
+        ;; the order of arguments of the append above
+        ;; determines the order in which the lemmas
+        ;; from a given db will be tried.
+        ;; Please we bear in mind, that since we parse the file
+        ;; and push the db declarations onto a stack and do no
+        ;; reverse it in the end, the order is actually twisted :->
+        ;; * (append (rest db) results)
+        ;;   this way the oldest declarations (closer to the top of the file)
+        ;;   will be used first
+        ;; * (append results (rest db))
+        ;;  this will make auto try the latests declaration
+        ;;  go first. Actually, (append results (reverse (rest db)))
+        ;;  would precisely simulate a real LIFO behavior.
+
+        ;; switching to the LIFO version has the nice feature,
+        ;; that the last added theorem should be more useful
+        ;; than the first one (or otherwise why add the last theorem
+        ;; in the first place [pardon the pun]).
+
+                              
 
 
 (defun agda2-list-to-string-with-sep (l &optional sep)
@@ -1238,8 +1254,8 @@ The result is given as list of length 2."
 
 
 (defun agda2-build-hints ()
-  "Searches the file for database declarations, read a list of chosen data-bases
-(and auto options, if given) from the current goal's input and returns a string
+  "Searches the file for database declarations, read a list of chosen data-bases (and 
+auto options, if given) from the current goal's input and returns a string
 that is ready to be given to auto as hints."
   (let* 
       ((dbs      (agda2-extract-dbs-from-buffer))

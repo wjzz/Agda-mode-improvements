@@ -253,7 +253,7 @@ constituents.")
     (agda2-goto-definition-keyboard "\M-.")
     (agda2-go-back                  "\M-*")
     ;; solve with theorem db
-    (agda2-solve-with-db "\C-u\C-c\C-a" (local) "Auto with theorems from the given db (or global if none given)")
+    (agda2-solve-with-db "\C-c\C-v" (local) "Auto with theorems from the given db (or global if none given)")
     )
   "Table of commands, used to build keymaps and menus.
 Each element has the form (CMD &optional KEYS WHERE DESC) where

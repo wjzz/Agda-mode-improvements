@@ -49,7 +49,7 @@ To use auto with a given database(s) you have to:
 1) place the cursor in a goal
 2) type the name(s) of the database(s) you want to use (this can be combined with 
 the standard agsy options, such as -c and -t 10)
-3) enter C-u C-c C-a    (this will invoke the agda2-solve-with-db function)
+3) enter C-c C-v    (this will invoke the agda2-solve-with-db function)
 
 For examples please look below.
 
@@ -76,7 +76,7 @@ any string not starting with a digit or the '-' character. Theorems can be
 added to the same db incrementally, just by inserting multiple comments of
 the form showed above. There is one default database called 'global'. The
 only special thing about it is that if no name will be inputed in the goal
-and the agda2-solve-with-db action will be run (with C-u C-c C-a) then
+and the agda2-solve-with-db action will be run (with C-c C-v) then
 the db called "global" will be used.
 
 For now, the databases are local to a file and have to be written in every
@@ -143,7 +143,7 @@ lem-0-r n = {!!}
 
 \end{code}
 
-Go the the above goal, type '-c global' and press C-u C-c C-a. Voila!
+Go the the above goal, type '-c global' and press C-c C-v. Voila!
 Actualy, since we're using the global database, you may shorten '-c global'
 just to '-c'!
 
@@ -163,7 +163,7 @@ while arith consists only of lem.
 Now it's time for the second lemma. We won't go into details this time,
 it suffices to mention that we need to use induction/recursion on n and
 once again wrap the recursive call with cong suc. So we can again solve it by
-typing '-c' and C-u C-c C-a. 
+typing '-c' and C-c C-v. 
 
 \begin{code}
 
@@ -194,7 +194,7 @@ lem-comm n m = {!!}
 
 \end{code}
 
-If you try the same '-c' and then C-u C-c C-a trick you might be a little
+If you try the same '-c' and then C-c C-v trick you might be a little
 surprised by the generated term:
 
 \begin{code}
@@ -210,7 +210,7 @@ lem3 zero m = sym (lem-0-r m)
 
 I know of one way to generate the clean version:
 * perform a manual case analysis on n and then do
-  C-u C-c C-a once on each goal (you don't have to input anything inside the goal)
+  C-c C-v once on each goal (you don't have to input anything inside the goal)
 
 I tried to swap cong and sym in the very first db declaration of this file to change the order
 in which hints are processed by auto, but then we get

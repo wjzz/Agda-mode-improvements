@@ -252,8 +252,10 @@ constituents.")
     (agda2-goto-definition-mouse [mouse-2])
     (agda2-goto-definition-keyboard "\M-.")
     (agda2-go-back                  "\M-*")
-    ;; solve with theorem db
+    ;; [] solve with theorem db
     (agda2-solve-with-db "\C-c\C-v" (local) "Auto with theorems from the given db (or global if none given)")
+    ;; 
+    (agda2-add-with-exp  "\C-c\C-w" (local) "Reify to a with expression")
     )
   "Table of commands, used to build keymaps and menus.
 Each element has the form (CMD &optional KEYS WHERE DESC) where
@@ -1179,7 +1181,7 @@ a custom separator sep, if given."
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; Hint databases for auto/agsy
+;;;; [] Hint databases for auto/agsy
 
 (defun agda2-extract-dbs-from-buffer ()
   (interactive)
@@ -1305,6 +1307,20 @@ and calls auto with the theorems from the db as hints."
       (insert hints)
       (agda2-auto))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; [] Adding a with expression to the current clause from a goal
+
+;; Example:
+;;   test m n = {! m == n ?}  -- type C-c C-w in goal
+;;   ....
+
+;;   test m n with m == n
+;;   test m n | clause0 = {!!}
+;;   ....
+            
+
+(defun agda2-add-with-exp (&optional opt)
+  (message opt))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 

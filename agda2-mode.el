@@ -1157,7 +1157,7 @@ the argument is a positive number, otherwise turn it off."
             (lookup-key agda2-goal-map (apply 'vector choice)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;;; A few utility functions
+;;;; [] A few utility functions
 
 
 (defun agda2-list-to-string-with-sep (l &optional sep)
@@ -1176,8 +1176,9 @@ a custom separator sep, if given."
 ;; extracted from agda2-goal-cmd
 (defun agda2-read-txt-from-goal ()
   "Returns the text inputed in the current goal."
- (buffer-substring-no-properties (+ (overlay-start o) 2)
-                                 (- (overlay-end   o) 2)))
+  (let ((o (first (agda2-goal-at (point)))))
+    (buffer-substring-no-properties (+ (overlay-start o) 2)
+                                    (- (overlay-end   o) 2))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1199,7 +1200,7 @@ and all listed theorems will be merged and included in the result."
       (when (re-search-forward " -}" end-boundary t)
         (setq end (match-beginning 0))
         (decf end)
-        (push (split-string (substring-no-properties (buffer-string) start end)) results)))
+        (push (split-string (buffer-substring-no-properties start end)) results)))
     results)))
 
 (defun agda2-get-db-contents-many (db-names all-dbs)
@@ -1320,7 +1321,22 @@ and calls auto with the theorems from the db as hints."
             
 
 (defun agda2-add-with-exp (&optional opt)
-  (message opt))
+  (interactive "P")
+
+  (multiple-value-bind (o g) (agda2-goal-at (point))
+    (unless g (error "For this command, please place the cursor in a goal"))
+
+    (let ((from-line-beg-to-point (buffer-substring-no-properties (line-beginning-position) 
+                                                                  (point)))
+          (goal-txt (agda2-read-txt-from-goal)))
+      
+      (if (string-match " = " from-line-beg-to-point)
+          (message from-line-beg-to-point)
+        (error "Can only add with expression to equations")))))
+
+;; (newline)
+;; (move-beginning-of-line 1)
+;; (line-beginning-position)
 
 ;;;;;;;;;;;;;;;;;;;;;;
 

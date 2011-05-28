@@ -1346,6 +1346,15 @@ and calls auto with the theorems from the db as hints."
 ;; " | cond0 | cond1 | cond2 | cond3"
 
     
+(defun agda2-extract-indentation (str)
+  (save-match-data
+    (string-match "^\\(\\s-*\\).*?" str)
+    (match-string 1 str)))
+
+;; example
+;; (agda2-extract-indentation "  hello!")    
+;; "  "
+
 
 (defun agda2-add-with-exp (&optional opt)
   ;; if opt is nil the lhs is repeated
@@ -1365,8 +1374,9 @@ and calls auto with the theorems from the db as hints."
       (re-search-backward " = ")
       (let* ((lhs (buffer-substring-no-properties (line-beginning-position)
                                                   (point)))
-             (no-of-bars (+ 1 (count 124 (string-to-list goal-txt))))
-             (conds      (agda2-generate-cond-str "cond" 0 no-of-bars)))
+             (indentation  (agda2-extract-indentation lhs))
+             (no-of-bars   (+ 1 (count 124 (string-to-list goal-txt))))
+             (conds        (agda2-generate-cond-str "cond" 0 no-of-bars)))
         
         (kill-line)
         (insert " with " goal-txt)
@@ -1374,15 +1384,10 @@ and calls auto with the theorems from the db as hints."
 
         (if opt
             (insert lhs conds " = {!!}")
-          (progn 
-            ;; indent!
-            (eri-indent)
-            (insert "..." conds " = {!!}")))
+            (insert indentation "..." conds " = {!!}"))
 
         (agda2-load)
-        (goto-char (- (point) 2))
-
-        ))))
+        (goto-char (- (point) 2))))))
 
 ;; this implementation makes one load too much
 (defun agda2-add-with-exp-make-case ()

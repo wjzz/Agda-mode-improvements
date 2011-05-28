@@ -1154,6 +1154,30 @@ the argument is a positive number, otherwise turn it off."
            (call-interactively
             (lookup-key agda2-goal-map (apply 'vector choice)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; A few utility functions
+
+
+(defun agda2-list-to-string-with-sep (l &optional sep)
+  "An invert to split-sting. Joins a list of strings with a single space or
+a custom separator sep, if given."
+  (unless sep
+    (setf sep " "))
+  (if l
+      (apply 'concat (first l) (mapcar (lambda (s) (concat sep s))
+                                       (rest l)))
+      ""))
+
+; (agda2-split-names (list "hello" "t-" "-t" "10"))
+
+
+;; extracted from agda2-goal-cmd
+(defun agda2-read-txt-from-goal ()
+  "Returns the text inputed in the current goal."
+ (buffer-substring-no-properties (+ (overlay-start o) 2)
+                                 (- (overlay-end   o) 2)))
+
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Hint databases for auto/agsy
 
@@ -1214,24 +1238,6 @@ the rest are the names of the theorems included in the given db."
         ;; in the first place [pardon the pun]).
 
                               
-
-
-(defun agda2-list-to-string-with-sep (l &optional sep)
-  "An invert to split-sting. Joins a list of strings with a single space or
-a custom separator sep, if given."
-  (unless sep
-    (setf sep " "))
-  (if l
-      (apply 'concat (first l) (mapcar (lambda (s) (concat sep s))
-                                       (rest l)))
-      ""))
-
-;; extracted from agda2-goal-cmd
-(defun agda2-read-txt-from-goal ()
-  "Returns the text inputed in the current goal."
- (buffer-substring-no-properties (+ (overlay-start o) 2)
-                                 (- (overlay-end   o) 2)))
-
 (defun agda2-split-names (names)
   "Given a list of strings (the current goal's input splitted)
 partitions it into two groups:
@@ -1249,8 +1255,6 @@ The result is given as list of length 2."
     ;; split names into auto options and names of db's
     (list (remove-if-not 'predicate names)
           (remove-if     'predicate names))))
-
-; (agda2-split-names (list "hello" "t-" "-t" "10"))
 
 
 (defun agda2-build-hints ()

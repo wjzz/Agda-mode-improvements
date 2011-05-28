@@ -254,8 +254,10 @@ constituents.")
     (agda2-go-back                  "\M-*")
     ;; [] solve with theorem db
     (agda2-solve-with-db "\C-c\C-v" (local) "Auto with theorems from the given db (or global if none given)")
-    ;; 
-    (agda2-add-with-exp  "\C-c\C-w" (local) "Reify to a with expression")
+    ;; with expression generating
+    (agda2-add-with-exp            "\C-c\C-w"     (local) "Reify to a with expression")
+    (agda2-add-with-exp-make-case  "\C-c\C-x\C-w" (local) "Reify to a with expression and make case")
+
     )
   "Table of commands, used to build keymaps and menus.
 Each element has the form (CMD &optional KEYS WHERE DESC) where
@@ -1181,6 +1183,12 @@ a custom separator sep, if given."
                                     (- (overlay-end   o) 2))))
 
 
+;; copied from slime.el, previously called slime-trim-whitespace
+(defun agda2-trim-whitespace (str)
+  (save-match-data
+    (string-match "^\\s-*\\(.*?\\)\\s-*$" str)
+    (match-string 1 str)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; [] Hint databases for auto/agsy
 
@@ -1320,7 +1328,28 @@ and calls auto with the theorems from the db as hints."
 ;;   ....
             
 
+(defun agda2-generate-cond-str (var-name start count)
+  (let ((last-index (- (+ start count) 1)))
+    (flet
+        ;; this function is not tail-recursive,
+        ;; but in practise we'll have only count < 10 (probably even < 5)
+        ((iter (n)
+               (if (> n last-index)
+                   nil
+                 (cons
+                  (concat " | " var-name (int-to-string n)) 
+                  (iter (+ 1 n))))))
+      (apply 'concat (iter start)))))
+
+;; example
+;; (agda2-generate-cond-str "cond" 0 4)
+;; " | cond0 | cond1 | cond2 | cond3"
+
+    
+
 (defun agda2-add-with-exp (&optional opt)
+  ;; if opt is nil the lhs is repeated
+  ;; otherwise the "..." syntax is used"
   (interactive "P")
 
   (multiple-value-bind (o g) (agda2-goal-at (point))
@@ -1328,15 +1357,40 @@ and calls auto with the theorems from the db as hints."
 
     (let ((from-line-beg-to-point (buffer-substring-no-properties (line-beginning-position) 
                                                                   (point)))
-          (goal-txt (agda2-read-txt-from-goal)))
-      
-      (if (string-match " = " from-line-beg-to-point)
-          (message from-line-beg-to-point)
-        (error "Can only add with expression to equations")))))
+          (goal-txt (agda2-trim-whitespace (agda2-read-txt-from-goal))))
 
-;; (newline)
-;; (move-beginning-of-line 1)
-;; (line-beginning-position)
+      (unless (string-match " = " from-line-beg-to-point)
+        (error "Can only add with expression to equations"))
+      
+      (re-search-backward " = ")
+      (let* ((lhs (buffer-substring-no-properties (line-beginning-position)
+                                                  (point)))
+             (no-of-bars (+ 1 (count 124 (string-to-list goal-txt))))
+             (conds      (agda2-generate-cond-str "cond" 0 no-of-bars)))
+        
+        (kill-line)
+        (insert " with " goal-txt)
+        (newline)
+
+        (if opt
+            (insert lhs conds " = {!!}")
+          (progn 
+            ;; indent!
+            (insert "... " conds " = {!!}")))
+
+        (agda2-load)
+        (goto-char (- (point) 2))
+
+        ))))
+
+;; this implementation makes one load too much
+(defun agda2-add-with-exp-make-case ()
+  (interactive)
+  (agda2-add-with-exp)
+  (insert "cond")
+  (agda2-make-case))
+  
+  
 
 ;;;;;;;;;;;;;;;;;;;;;;
 

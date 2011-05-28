@@ -1376,7 +1376,8 @@ and calls auto with the theorems from the db as hints."
             (insert lhs conds " = {!!}")
           (progn 
             ;; indent!
-            (insert "... " conds " = {!!}")))
+            (eri-indent)
+            (insert "..." conds " = {!!}")))
 
         (agda2-load)
         (goto-char (- (point) 2))
@@ -1386,8 +1387,8 @@ and calls auto with the theorems from the db as hints."
 ;; this implementation makes one load too much
 (defun agda2-add-with-exp-make-case ()
   (interactive)
-  (agda2-add-with-exp)
-  (insert "cond")
+  (agda2-add-with-exp t)
+  (insert "cond0")
   (agda2-make-case))
   
   

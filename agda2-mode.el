@@ -1333,7 +1333,7 @@ and calls auto with the theorems from the db as hints."
 Count in the number of clauses, start is the index of the first
 variable.
 For example:
- (agda2-generate-cond-str "cond" 0 4)
+ (agda2-generate-cond-str \"cond\" 0 4)
  yields
  ' | cond0 | cond1 | cond2 | cond3'"
 

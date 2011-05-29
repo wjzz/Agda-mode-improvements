@@ -1329,6 +1329,14 @@ and calls auto with the theorems from the db as hints."
             
 
 (defun agda2-generate-cond-str (var-name start count)
+  "Generates a string to be inserted below the with expression.
+Count in the number of clauses, start is the index of the first
+variable.
+For example:
+ (agda2-generate-cond-str "cond" 0 4)
+ yields
+ ' | cond0 | cond1 | cond2 | cond3'"
+
   (let ((last-index (- (+ start count) 1)))
     (flet
         ;; this function is not tail-recursive,
@@ -1340,13 +1348,9 @@ and calls auto with the theorems from the db as hints."
                   (concat " | " var-name (int-to-string n)) 
                   (iter (+ 1 n))))))
       (apply 'concat (iter start)))))
-
-;; example
-;; (agda2-generate-cond-str "cond" 0 4)
-;; " | cond0 | cond1 | cond2 | cond3"
-
     
 (defun agda2-extract-indentation (str)
+  "Extracts the indentation prefix of str."
   (save-match-data
     (string-match "^\\(\\s-*\\).*?" str)
     (match-string 1 str)))
@@ -1357,8 +1361,29 @@ and calls auto with the theorems from the db as hints."
 
 
 (defun agda2-add-with-exp (&optional opt)
-  ;; if opt is nil the lhs is repeated
-  ;; otherwise the "..." syntax is used"
+  "Inserts a with expression of the left hand side of an equation, if invoked in
+a goal that is the right hand side of the equation. The contents of the goal
+will be inserted as a argument of the with and an additional line with be inserted,
+that will contain bidings for all expressions and a new goal after a '=' character.
+The optional argument determines which variant should be used, see example:
+
+Invoked with opt == nil in the goal below:
+equal? m n = {! m \?= m !}
+.....
+
+will give
+equal? m n with m \?= n
+... | cond0 = {! !}
+.....
+
+ (with the cursor placed in the goal).
+
+If opt is true then we'll get:
+
+equal? m n with m \?= n
+equal? m n | cond0 = {! cond0 !}
+......
+"
   (interactive "P")
 
   (multiple-value-bind (o g) (agda2-goal-at (point))
@@ -1390,13 +1415,15 @@ and calls auto with the theorems from the db as hints."
         (goto-char (- (point) 2))))))
 
 ;; this implementation makes one load too much
+;; I'll leave it like this for a while,
+;; if this proves to be annoying then I'll fix it.
 (defun agda2-add-with-exp-make-case ()
+  "Calls agda2-add-with-exp and then makes a case analysis on the
+first clause."
   (interactive)
   (agda2-add-with-exp t)
   (insert "cond0")
-  (agda2-make-case))
-  
-  
+  (agda2-make-case))  
 
 ;;;;;;;;;;;;;;;;;;;;;;
 

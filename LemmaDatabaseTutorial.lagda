@@ -94,7 +94,7 @@ We'll need nats, ≡ and some properties of the equality.
 
 \begin{code}
 
-module Tutorial where
+module LemmaDatabaseTutorial where
 
 open import Data.Nat                              using (ℕ; zero; suc; _+_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans)

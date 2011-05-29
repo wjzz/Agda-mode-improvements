@@ -1,0 +1,5 @@
+Some simple tools for agda-mode to make programming in Agda even more enjoyable.
+
+Features started so far:
+1) A simple lemma database support (see LemmaDatabaseTutorial.lagda)
+2) A few functions for creating a with expression by writing it inside a goal (see WithClausesTutorial.lagda)

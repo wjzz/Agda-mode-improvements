@@ -1205,7 +1205,7 @@ and all listed theorems will be merged and included in the result."
     (goto-char (point-min))
     (while (setq start 
                  (re-search-forward "{- BASE" end-boundary t))
-      (when (re-search-forward " -}" end-boundary t)
+      (when (re-search-forward "-}" end-boundary t)
         (setq end (match-beginning 0))
         (decf end)
         (push (split-string (buffer-substring-no-properties start end)) results)))

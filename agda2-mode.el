@@ -259,6 +259,8 @@ constituents.")
     ;; with expression generating
     (agda2-add-with-exp            "\C-c\C-w"     (local) "Reify to a with expression")
     (agda2-add-with-exp-make-case  "\C-c\C-x\C-w" (local) "Reify to a with expression and make case")
+    ;; stub generation
+    (agda2-generate-function-stub "\C-c\C-g" (global) "Generate a function stub from type declaration.")
 
     )
   "Table of commands, used to build keymaps and menus.
@@ -1486,6 +1488,43 @@ first clause."
   (agda2-add-with-exp t)
   (insert "cond0")
   (agda2-make-case))  
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; [] Generating a function stub with all arguments named
+
+(defun agda2-generate-function-stub ()
+"Generate a function stub from type declaration."
+  (interactive)
+
+  (end-of-line)
+  (re-search-backward "^[^(]+: ")
+  (re-search-forward " : ")
+  (backward-char 3)
+    
+  (let* 
+      ((name-end (point))
+       (name (buffer-substring (line-beginning-position) (point))))
+    (beginning-of-line)
+    (while (not (looking-at "\\s *$"))
+      (next-line)
+      (beginning-of-line))
+      (insert name)
+      (insert " = ?")
+      (agda2-load)
+
+      (agda2-refine)
+
+      (re-search-backward " = ")
+      (re-search-forward " λ ")
+      (delete-char -4)
+      
+
+      (re-search-forward "→")
+      (delete-char -1)
+      (insert "=")
+      
+      (agda2-load)
+      (goto-char (+ 2 (point)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 

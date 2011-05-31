@@ -254,6 +254,8 @@ constituents.")
     (agda2-go-back                  "\M-*")
     ;; [] solve with theorem db
     (agda2-solve-with-db "\C-c\C-v" (local) "Auto with theorems from the given db (or global if none given)")
+    ;; show current dbs
+    (agda2-show-current-dbs "\C-c\C-x\C-s" (local global) "Show contents of all databases at this point")
     ;; with expression generating
     (agda2-add-with-exp            "\C-c\C-w"     (local) "Reify to a with expression")
     (agda2-add-with-exp-make-case  "\C-c\C-x\C-w" (local) "Reify to a with expression and make case")
@@ -1359,7 +1361,7 @@ If verbose is not nil, then each lemma is listed with it's type"
       ((all-dbs (agda2-extract-dbs-from-buffer))
        (hash    (agda2-join-dbs-as-hash (reverse all-dbs)))
        (dbs     (agda2-hash-to-list hash)))
-    (print dbs)))
+    (agda2-info-action "* DB contents* " (concat "\n" (agda2-pretty-print-db-list dbs)))))
 
 
 

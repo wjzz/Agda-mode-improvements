@@ -260,8 +260,9 @@ constituents.")
     (agda2-add-with-exp            "\C-c\C-w"     (local) "Reify to a with expression")
     (agda2-add-with-exp-make-case  "\C-c\C-x\C-w" (local) "Reify to a with expression and make case")
     ;; stub generation
-    (agda2-generate-function-stub "\C-c\C-g" (global) "Generate a function stub from type declaration.")
-
+    (agda2-generate-function-stub "\C-cg" (global) "Generate a function stub from type declaration.")
+    ;; fix line
+    (agda2-fix-line "\C-c\C-x\C-f" (global) "Try to fix a line with broken patterns by changing them to ...")
     )
   "Table of commands, used to build keymaps and menus.
 Each element has the form (CMD &optional KEYS WHERE DESC) where
@@ -1525,6 +1526,32 @@ first clause."
       
       (agda2-load)
       (goto-char (+ 2 (point)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; [] Fix a line with broken patterns by inserting ... | 
+(defun agda2-fix-line ()
+  (interactive)
+
+  ;; how many cases has the last with exp had?
+  (setq no-of-bars (save-excursion
+                     (re-search-backward " with ")
+                     (+ 1 (count 124 (string-to-list (buffer-substring-no-properties (point) (line-end-position)))))))
+
+  (beginning-of-line)
+  (re-search-forward " = ")
+
+  (while (> no-of-bars 0)
+    (re-search-backward " | ")
+    (decf no-of-bars))
+
+  (let* 
+      ((end-point (point))
+       (upto-end (buffer-substring-no-properties (line-beginning-position) end-point))
+       (indent   (agda2-extract-indentation upto-end)))
+    (delete-region (line-beginning-position) end-point)
+    (insert indent "...")))
+    
+
 
 ;;;;;;;;;;;;;;;;;;;;;;
 

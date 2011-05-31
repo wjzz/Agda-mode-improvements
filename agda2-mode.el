@@ -1396,6 +1396,9 @@ equal? m n | cond0 = {! cond0 !}
       (unless (string-match " = " from-line-beg-to-point)
         (error "Can only add with expression to equations"))
       
+      (when (string-match "\\`\\s *\\'" goal-txt)
+        (setq goal-txt (read-string "Expression to with on: " nil nil goal-txt t)))
+
       (re-search-backward " = ")
       (let* ((lhs (buffer-substring-no-properties (line-beginning-position)
                                                   (point)))
@@ -1413,6 +1416,7 @@ equal? m n | cond0 = {! cond0 !}
 
         (agda2-load)
         (goto-char (- (point) 2))))))
+
 
 ;; this implementation makes one load too much
 ;; I'll leave it like this for a while,

@@ -1353,6 +1353,12 @@ and calls auto with the theorems from the db as hints."
       (insert hints)
       (agda2-auto))))
 
+(defun agda2-flatten-list (ls)
+  (mapcar (lambda (l) (when l (cons (first l) (second l)))) ls))
+
+(defun agda2-nested-string-list-quote (ls)
+  (concat "[ " (agda2-list-to-string-with-sep (mapcar 'agda2-list-quote ls) ", ") " ] "))
+
 (defun agda2-show-current-dbs (&optional verbose)
   "Prints a lists of dbs in the current scope and lists their contents.
 If verbose is not nil, then each lemma is listed with it's type"
@@ -1361,8 +1367,11 @@ If verbose is not nil, then each lemma is listed with it's type"
       ((all-dbs (agda2-extract-dbs-from-buffer))
        (hash    (agda2-join-dbs-as-hash (reverse all-dbs)))
        (dbs     (agda2-hash-to-list hash)))
-    (agda2-info-action "* DB contents* " (concat "\n" (agda2-pretty-print-db-list dbs)))))
-
+    (if verbose
+        (let ((string-for-haskell (agda2-nested-string-list-quote (agda2-flatten-list dbs))))
+          (agda2-go t nil (concat "cmd_infer_db_contents Agda.Interaction.BasicOps.Normalised " 
+                                  (agda2-string-quote string-for-haskell))))
+        (agda2-info-action "*DB contents* " (concat "\n" (agda2-pretty-print-db-list dbs))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

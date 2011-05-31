@@ -1189,27 +1189,62 @@ a custom separator sep, if given."
     (string-match "^\\s-*\\(.*?\\)\\s-*$" str)
     (match-string 1 str)))
 
+(defun agda2-join-dbs-as-hash (all-dbs)
+  "Takes a list of lists and inserts them into a hash
+with the key being the first element of each list. Empty lists
+are ignored."
+  (let 
+      ((hash (make-hash-table :test 'equal)))
+    (dolist (db all-dbs hash)
+      (when db
+        (let 
+            ((db-name (first db))
+             (lemmas  (rest db)))
+          (puthash db-name 
+                   (append (gethash db-name hash)
+                           lemmas) 
+                   hash))))))
+
+(defun agda2-hash-to-list (hash)
+  "Convert a hash to list of lists where first/car is the key
+and rest/cdr is the value."
+  (let (result)
+    (maphash (lambda (k v) (push (list k v) result)) hash)
+    result))
+
+; (agda2-hash-to-list (agda2-join-dbs-as-hash '(("global" "hello") ("arith" "plus") ("global" "hello2"))))
+; yields
+; (("arith" ("plus")) ("global" ("hello" "hello2")))
+
+(defun agda2-pretty-print-db-list (lists)
+  (let 
+      (elements)
+    (dolist (l lists)
+      (push (concat (first l) ":\n\t" (agda2-list-to-string-with-sep (second l))) elements))
+    (agda2-list-to-string-with-sep (reverse elements) "\n")))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; [] Hint databases for auto/agsy
 
 (defun agda2-extract-dbs-from-buffer ()
-  (interactive)
   "Travels the whole buffer and looks for db declarations.
 A db declaration is a comment of form 
 {- BASE name-of-db theorem-name* -}
 db declaration can mention the same database many times in a file
-and all listed theorems will be merged and included in the result."
-(let ((end-boundary (point))
-      start end results)
-  (save-excursion
-    (goto-char (point-min))
-    (while (setq start 
-                 (re-search-forward "{- BASE" end-boundary t))
-      (when (re-search-forward "-}" end-boundary t)
-        (setq end (match-beginning 0))
-        (decf end)
-        (push (split-string (buffer-substring-no-properties start end)) results)))
-    results)))
+and all listed theorems will be merged and included in the result.
+This function, however, does not perform the merging."
+  (interactive)
+  (let ((end-boundary (point))
+        start end results)
+    (save-excursion
+      (goto-char (point-min))
+      (while (setq start 
+                   (re-search-forward "{- BASE" end-boundary t))
+        (when (re-search-forward "-}" end-boundary t)
+          (setq end (match-beginning 0))
+          (decf end)
+          (push (split-string (buffer-substring-no-properties start end)) results)))
+      results)))
 
 (defun agda2-get-db-contents-many (db-names all-dbs)
   "Iterates through the all-dbs list and collects the theorems
@@ -1315,6 +1350,18 @@ and calls auto with the theorems from the db as hints."
       ;; intert the hints, just as if the user had inputted them by himself, and call auto
       (insert hints)
       (agda2-auto))))
+
+(defun agda2-show-current-dbs (&optional verbose)
+  "Prints a lists of dbs in the current scope and lists their contents.
+If verbose is not nil, then each lemma is listed with it's type"
+  (interactive "P")
+  (let* 
+      ((all-dbs (agda2-extract-dbs-from-buffer))
+       (hash    (agda2-join-dbs-as-hash (reverse all-dbs)))
+       (dbs     (agda2-hash-to-list hash)))
+    (print dbs)))
+
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; [] Adding a with expression to the current clause from a goal

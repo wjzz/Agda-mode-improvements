@@ -1,0 +1,24 @@
+********************************************************************
+*  Agda-mode improvements changes since 0.1 (first announcements)  *
+********************************************************************
+
+* lemma databases
+  - [BUGFIX] additional space before '-}' a db declaration no longer needed
+
+  - [NEW]    C-c C-x C-s displays the contents of all dbs at the current point,
+             C-u C-c C-x C-s displays the contents of all dbs at the current point 
+               along with type signatures (needs a patched agda-mode)
+
+  - (this was present before, but wasn't documented) newlines are allowed in the
+    db declarations, only the '{- BASE' part can't have more than 1 space
+
+* convenient with expressions adding
+  - [BUGFIX/NEW] calling C-c C-w on an empty/whitespace only goal doesn't insert
+                 an empty with, ask for an expression instead (similar to C-c C-c)
+
+  - [BUGFIX]     better support for generating non-clashing names that name the
+                 results of with expressions
+
+* [NEW] generating function body based on type signature
+
+* [NEW] deleting a broken pattern declaration and inserting '... | '

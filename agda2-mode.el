@@ -1194,6 +1194,16 @@ a custom separator sep, if given."
     (string-match "^\\s-*\\(.*?\\)\\s-*$" str)
     (match-string 1 str)))
 
+(defun agda2-extract-indentation (str)
+  "Extracts the indentation prefix of str."
+  (save-match-data
+    (string-match "^\\(\\s-*\\).*?" str)
+    (match-string 1 str)))
+
+;; example
+;; (agda2-extract-indentation "  hello!")    
+;; "  "
+
 (defun agda2-join-dbs-as-hash (all-dbs)
   "Takes a list of lists and inserts them into a hash
 with the key being the first element of each list. Empty lists
@@ -1410,15 +1420,6 @@ For example:
                   (iter (+ 1 n))))))
       (apply 'concat (iter start)))))
     
-(defun agda2-extract-indentation (str)
-  "Extracts the indentation prefix of str."
-  (save-match-data
-    (string-match "^\\(\\s-*\\).*?" str)
-    (match-string 1 str)))
-
-;; example
-;; (agda2-extract-indentation "  hello!")    
-;; "  "
 
 
 (defun agda2-add-with-exp (&optional opt)
@@ -1464,8 +1465,13 @@ equal? m n | cond0 = {! cond0 !}
       (let* ((lhs (buffer-substring-no-properties (line-beginning-position)
                                                   (point)))
              (indentation  (agda2-extract-indentation lhs))
-             (no-of-bars   (+ 1 (count 124 (string-to-list goal-txt))))
-             (conds        (agda2-generate-cond-str "cond" 0 no-of-bars)))
+             (no-of-bars-goal  (+ 1 (count 124 (string-to-list goal-txt))))
+             (last-cond-index  (progn
+                                 (save-excursion
+                                   (re-search-backward " cond\\([0-9]+\\)"))
+                                 (string-to-number (match-string-no-properties 1))))
+             (no-of-bars-lhs   (+ 1 last-cond-index))
+             (conds            (agda2-generate-cond-str "cond" no-of-bars-lhs no-of-bars-goal)))
         
         (kill-line)
         (insert " with " goal-txt)
@@ -1525,7 +1531,13 @@ first clause."
       (insert "=")
       
       (agda2-load)
-      (goto-char (+ 2 (point)))))
+      (goto-char (+ 2 (point)))
+      
+      ;; insert an empty line below
+      (setq back-point (point))
+      (end-of-line)
+      (newline)
+      (goto-char back-point)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; [] Fix a line with broken patterns by inserting ... | 

@@ -7,7 +7,18 @@
 
   - [NEW]    C-c C-x C-s displays the contents of all dbs at the current point,
              C-u C-c C-x C-s displays the contents of all dbs at the current point 
-               along with type signatures (needs a patched agda-mode)
+               along with type signatures (needs a patched Agda-2-2-10)
+
+  - [NEW] dbs importing to the current module is now possible. The supported syntax is:
+
+    1) {- BASE IMPORT module-name -}                        # copies all dbs from module-name into current module
+
+    2) {- BASE IMPORT module-name base1 base2 ... basen -}  # copies dbs named base1 .. basen from module-name
+
+    3) {- BASE IMPORT module-name INTO base -}              # copies all dbs from module-name to a single db called base 
+
+    4) variants 2 & 3 can be combined as
+       {- BASE IMPORT module-name base1 ... basen INTO final-base -}
 
   - (this was present before, but wasn't documented) newlines are allowed in the
     db declarations, only the '{- BASE' part can't have more than 1 space

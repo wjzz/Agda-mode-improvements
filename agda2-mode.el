@@ -1163,6 +1163,9 @@ the argument is a positive number, otherwise turn it off."
            (call-interactively
             (lookup-key agda2-goal-map (apply 'vector choice)))))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Agda-mode improvements definitions start here
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; [] A few utility functions
 
@@ -1183,7 +1186,7 @@ a custom separator sep, if given."
 ;; extracted from agda2-goal-cmd
 (defun agda2-read-txt-from-goal ()
   "Returns the text inputed in the current goal."
-  (let ((o (first (agda2-goal-at (point)))))
+  (lexical-let ((o (first (agda2-goal-at (point)))))
     (buffer-substring-no-properties (+ (overlay-start o) 2)
                                     (- (overlay-end   o) 2))))
 
@@ -1208,11 +1211,11 @@ a custom separator sep, if given."
   "Takes a list of lists and inserts them into a hash
 with the key being the first element of each list. Empty lists
 are ignored."
-  (let 
+  (lexical-let 
       ((hash (make-hash-table :test 'equal)))
     (dolist (db all-dbs hash)
       (when db
-        (let 
+        (lexical-let 
             ((db-name (first db))
              (lemmas  (rest db)))
           (puthash db-name 
@@ -1223,7 +1226,7 @@ are ignored."
 (defun agda2-hash-to-list (hash)
   "Convert a hash to list of lists where first/car is the key
 and rest/cdr is the value."
-  (let (result)
+  (lexical-let (result)
     (maphash (lambda (k v) (push (list k v) result)) hash)
     result))
 
@@ -1232,7 +1235,7 @@ and rest/cdr is the value."
 ; (("arith" ("plus")) ("global" ("hello" "hello2")))
 
 (defun agda2-pretty-print-db-list (lists)
-  (let 
+  (lexical-let 
       (elements)
     (dolist (l lists)
       (push (concat (first l) ":\n\t" (agda2-list-to-string-with-sep (second l))) elements))
@@ -1241,16 +1244,66 @@ and rest/cdr is the value."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; [] Hint databases for auto/agsy
 
+(defun agda2-extract-dbs-from-file (module-name)
+  (save-excursion
+    (lexical-let ((import-prefix "import "))
+      (goto-char (point-min))
+      (re-search-forward (concat import-prefix module-name))
+      (backward-char 2)
+      (agda2-goto-definition-keyboard)
+      (goto-char (point-max))
+      (lexical-let 
+          ((extraction (agda2-extract-dbs-from-buffer)))
+        (kill-buffer)
+        extraction))))
+        
+(defun agda2-partition-into-part (parts)
+  (lexical-let
+      ((to-first t)
+       bases
+       into)
+    (dolist (part parts (list (reverse bases) 
+                              (reverse into)))
+      (cond ((string-equal "INTO" part)  ;; from now on add to the into list
+             (setq to-first nil))
+            (to-first
+             (push part bases))
+            (t
+             (push part into))))))
+
+; (agda2-partition-into-part '("heloo" "lem" "tralala"))
+; (agda2-partition-into-part '("heloo" "lem" "tralala" "INTO" "arith"))
+              
+
+(defun agda2-filter-imports (imported-data chosen-db-names)
+  (lexical-let
+      (results)
+    (dolist (decl imported-data (reverse results))
+      (if (and decl
+               (member (first decl) chosen-db-names))
+          (push decl results)))))
+
+; (agda2-filter-imports '(("global" "lem") ("arith" "jam")) '("arith"))
+
+(defun agda2-rename-imports (imported-data new-name)
+  (mapcar (lambda (l) (if l
+                          (cons new-name (rest l))
+                          l))
+          imported-data))
+
+; (agda2-rename-imports '(("global" "lem") ("arith" "jam")) "imported-db")
+
 (defun agda2-extract-dbs-from-buffer ()
   "Travels the whole buffer and looks for db declarations.
 A db declaration is a comment of form 
 {- BASE name-of-db theorem-name* -}
-db declaration can mention the same database many times in a file
+db declaration can mention the same database multiple times in a file
 and all listed theorems will be merged and included in the result.
 This function, however, does not perform the merging."
   (interactive)
-  (let ((end-boundary (point))
-        start end results)
+  (lexical-let 
+      ((end-boundary (point))
+       start end results)
     (save-excursion
       (goto-char (point-min))
       (while (setq start 
@@ -1258,7 +1311,26 @@ This function, however, does not perform the merging."
         (when (re-search-forward "-}" end-boundary t)
           (setq end (match-beginning 0))
           (decf end)
-          (push (split-string (buffer-substring-no-properties start end)) results)))
+          (lexical-let*
+              ((parts (split-string (buffer-substring-no-properties start end))))
+            (if (string-equal "IMPORT" (first parts))
+
+                ;; we need to import declarations
+                (lexical-let*
+                    ((imported-data (agda2-extract-dbs-from-file (second parts)))
+                     (partitioned   (agda2-partition-into-part (rest (rest parts))))
+                     (bases         (first partitioned))
+                     (renaming      (second partitioned))
+                     (filtered-data (if bases 
+                                        (agda2-filter-imports imported-data bases)
+                                        imported-data))
+                     (final-data    (if renaming
+                                        (agda2-rename-imports filtered-data (first renaming))
+                                        filtered-data)))
+                  (setq results (append final-data results)))
+                
+                ;; we don't need to import declarations
+                (push parts results)))))
       results)))
 
 (defun agda2-get-db-contents-many (db-names all-dbs)
@@ -1269,7 +1341,7 @@ db-names should be a list of strings ;
 all-dbs should be a list of list of strings, where
 the first element of each list is the name of db and
 the rest are the names of the theorems included in the given db."
-  (let (results)
+  (lexical-let (results)
     (dolist (db all-dbs results)
       (when (and db
                  (member-if (lambda (db-name)
@@ -1322,7 +1394,7 @@ The result is given as list of length 2."
   "Searches the file for database declarations, read a list of chosen data-bases (and 
 auto options, if given) from the current goal's input and returns a string
 that is ready to be given to auto as hints."
-  (let* 
+  (lexical-let* 
       ((dbs      (agda2-extract-dbs-from-buffer))
        (goal-txt (agda2-read-txt-from-goal))
        (names    (split-string goal-txt))
@@ -1348,7 +1420,7 @@ and calls auto with the theorems from the db as hints."
   (multiple-value-bind (o g) (agda2-goal-at (point))
     (unless g (error "For this command, please place the cursor in a goal"))
     
-    (let
+    (lexical-let
         ((hints (agda2-build-hints)))
 
       ;; an ugly boundary case:
@@ -1376,12 +1448,12 @@ and calls auto with the theorems from the db as hints."
   "Prints a lists of dbs in the current scope and lists their contents.
 If verbose is not nil, then each lemma is listed with it's type"
   (interactive "P")
-  (let* 
+  (lexical-let* 
       ((all-dbs (agda2-extract-dbs-from-buffer))
        (hash    (agda2-join-dbs-as-hash (reverse all-dbs)))
        (dbs     (agda2-hash-to-list hash)))
     (if verbose
-        (let ((string-for-haskell (agda2-nested-string-list-quote (agda2-flatten-list dbs))))
+        (lexical-let ((string-for-haskell (agda2-nested-string-list-quote (agda2-flatten-list dbs))))
           (agda2-go t nil (concat "cmd_infer_db_contents Agda.Interaction.BasicOps.Normalised " 
                                   (agda2-string-quote string-for-haskell))))
         (agda2-info-action "*DB contents* " (concat "\n" (agda2-pretty-print-db-list dbs))))))
@@ -1408,7 +1480,7 @@ For example:
  yields
  ' | cond0 | cond1 | cond2 | cond3'"
 
-  (let ((last-index (- (+ start count) 1)))
+  (lexical-let ((last-index (- (+ start count) 1)))
     (flet
         ;; this function is not tail-recursive,
         ;; but in practise we'll have only count < 10 (probably even < 5)
@@ -1451,7 +1523,7 @@ equal? m n | cond0 = {! cond0 !}
   (multiple-value-bind (o g) (agda2-goal-at (point))
     (unless g (error "For this command, please place the cursor in a goal"))
 
-    (let ((from-line-beg-to-point (buffer-substring-no-properties (line-beginning-position) 
+    (lexical-let ((from-line-beg-to-point (buffer-substring-no-properties (line-beginning-position) 
                                                                   (point)))
           (goal-txt (agda2-trim-whitespace (agda2-read-txt-from-goal))))
 
@@ -1462,7 +1534,7 @@ equal? m n | cond0 = {! cond0 !}
         (setq goal-txt (read-string "Expression to with on: " nil nil goal-txt t)))
 
       (re-search-backward " = ")
-      (let* ((lhs (buffer-substring-no-properties (line-beginning-position)
+      (lexical-let* ((lhs (buffer-substring-no-properties (line-beginning-position)
                                                   (point)))
              (indentation  (agda2-extract-indentation lhs))
              (no-of-bars-goal  (+ 1 (count 124 (string-to-list goal-txt))))
@@ -1508,7 +1580,7 @@ first clause."
   (re-search-forward " : ")
   (backward-char 3)
     
-  (let* 
+  (lexical-let* 
       ((name-end (point))
        (name (buffer-substring (line-beginning-position) (point))))
     (beginning-of-line)
@@ -1556,7 +1628,7 @@ first clause."
     (re-search-backward " | ")
     (decf no-of-bars))
 
-  (let* 
+  (lexical-let* 
       ((end-point (point))
        (upto-end (buffer-substring-no-properties (line-beginning-position) end-point))
        (indent   (agda2-extract-indentation upto-end)))

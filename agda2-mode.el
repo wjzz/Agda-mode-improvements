@@ -1538,10 +1538,10 @@ equal? m n | cond0 = {! cond0 !}
                                                   (point)))
              (indentation  (agda2-extract-indentation lhs))
              (no-of-bars-goal  (+ 1 (count 124 (string-to-list goal-txt))))
-             (last-cond-index  (progn
-                                 (save-excursion
-                                   (re-search-backward " cond\\([0-9]+\\)"))
-                                 (string-to-number (match-string-no-properties 1))))
+             (last-cond-index  (save-excursion
+                                   (if (re-search-backward " cond\\([0-9]+\\)" (line-beginning-position) t)
+                                       (string-to-number (match-string-no-properties 1))
+                                     -1)))
              (no-of-bars-lhs   (+ 1 last-cond-index))
              (conds            (agda2-generate-cond-str "cond" no-of-bars-lhs no-of-bars-goal)))
         

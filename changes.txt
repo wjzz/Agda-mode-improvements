@@ -1,5 +1,5 @@
 ********************************************************************
-*  Agda-mode improvements changes since 0.1 (first announcements)  *
+*  Agda-mode-improvements changes since 0.1 (first announcements)  *
 ********************************************************************
 
 * lemma databases
@@ -9,7 +9,7 @@
              C-u C-c C-x C-s displays the contents of all dbs at the current point 
                along with type signatures (needs a patched Agda-2-2-10)
 
-  - [NEW] dbs importing to the current module is now possible. The supported syntax is:
+  - [NEW] importing databases into the current module is now possible. The supported syntax is:
 
     1) {- BASE IMPORT module-name -}                        # copies all dbs from module-name into current module
 
@@ -23,13 +23,19 @@
   - (this was present before, but wasn't documented) newlines are allowed in the
     db declarations, only the '{- BASE' part can't have more than 1 space
 
-* convenient with expressions adding
-  - [BUGFIX/NEW] calling C-c C-w on an empty/whitespace only goal doesn't insert
-                 an empty with, ask for an expression instead (similar to C-c C-c)
+* convenient with-expressions insertion
+  - [BUGFIX/NEW] calling C-c C-w on an empty/whitespace-only goal doesn't insert
+                 an empty with, prompts for an expression instead (similar to C-c C-c)
 
   - [BUGFIX]     better support for generating non-clashing names that name the
                  results of with expressions
 
-* [NEW] generating function body based on type signature
+* [NEW] (*) generating a function body stub based on type signature
 
-* [NEW] deleting a broken pattern declaration and inserting '... | '
+* [NEW] (*) deleting a broken pattern declaration and inserting '... | '
+
+* [DOCS] 
+    LemmasDatabasesTutorial.lagda - written sections
+      Importing databases from imported modules
+      Browsing the contents of databases at the current position
+    README - written about the starred (*) features

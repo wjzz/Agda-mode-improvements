@@ -79,9 +79,65 @@ only special thing about it is that if no name will be inputed in the goal
 and the agda2-solve-with-db action will be run (with C-c C-v) then
 the db called "global" will be used.
 
-For now, the databases are local to a file and have to be written in every
-file. If the whole feature will prove useful, I will try to desing a more
-modular solution.
+=========================================
+Importing databases from imported modules
+=========================================
+
+To use databases from other files use one of the following forms:
+
+1) {- BASE IMPORT module-name -}                        # copies all dbs from module-name into current module
+2) {- BASE IMPORT module-name base1 base2 ... basen -}  # copies dbs named base1 .. basen from module-name
+3) {- BASE IMPORT module-name INTO base -}              # copies all dbs from module-name to a single db called base 
+
+4) variants 2 & 3 can be combined as
+   {- BASE IMPORT module-name base1 ... basen INTO final-base -}
+
+So for example,
+{- BASE IMPORT Data.List map permutations INTO perms -}
+will create/extend the db perms in the current file by theorems from the map and permutations dbs from the
+Data.List file.
+
+==========================================================
+Browsing the contents of databases at the current position
+==========================================================
+
+* Type C-c C-x C-s (s for "show") to see a list of all current
+dbs with the names of all included lemmas. Example output:
+
+<example-output>
+
+perm:
+	perm-id perm-sym perm-in perm-in-rev perm-swap perm-nil perm-app
+global:
+	⊥-elim cong cong₂
+
+</example-output>
+
+
+* (Experimental feature, needs a patched Agda package [one would have to patch GhciTop.hs])
+
+Type C-u C-c C-x C-s to a list detailed list of all current
+dbs with the names *and types* of all inluded lemmas. 
+
+<example-output>
+perm:
+  perm-id:
+    (l : List _828) → Permutation l l
+  perm-sym:
+    (l1 l2 : List _831) → Permutation l1 l2 → Permutation l2 l1
+  perm-nil:
+    (l : List _843) → Permutation [] l → l ≡ []
+
+global:
+  ⊥-elim:
+    ⊥ → _886
+  cong:
+    (f : _891 → _892) {x y : _891} → x ≡ y → f x ≡ f y
+  cong₂:
+    (f : _898 → _899 → _900) {x y : _898} {u v : _899} →
+    x ≡ y → u ≡ v → f x u ≡ f y v
+</example-output>
+
 
 =======================
 auto-with-dbs in action

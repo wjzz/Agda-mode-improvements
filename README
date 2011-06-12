@@ -1,5 +1,90 @@
+------------------
+-- Introduction --
+------------------
+
 Some simple tools for agda-mode to make programming in Agda even more enjoyable.
 
+------------------
+-- Installation --
+------------------
+
+Copy the agda2-mode-improvements.el files to your agda-mode directory.
+Update the agda2-mode.el file with the version from this repo or 
+1) add
+
+(load "agda2-mode-improvements")
+
+at the end your agda2-mode.el, just before the
+
+;;;;;;;;;;;;;;;;;;;;;;
+
+(provide 'agda2-mode)
+;;; agda2-mode.el ends here
+
+lines.
+
+2) add keybindings for the new features:
+
+    ;; [] solve with theorem db
+    (agda2-solve-with-db "\C-c\C-v" (local) "Auto with theorems from the given db (or global if none given)")
+    ;; show current dbs
+    (agda2-show-current-dbs "\C-c\C-x\C-s" (local global) "Show contents of all databases at this point")
+    ;; with expression generating
+    (agda2-add-with-exp            "\C-c\C-w"     (local) "Reify to a with expression")
+    (agda2-add-with-exp-make-case  "\C-c\C-x\C-w" (local) "Reify to a with expression and make case")
+    ;; stub generation
+    (agda2-generate-function-stub "\C-cg" (global) "Generate a function stub from type declaration.")
+    ;; fix line
+    (agda2-fix-line "\C-c\C-x\C-f" (global) "Try to fix a line with broken patterns by changing them to ...")
+
+To locate the directory with the emacs-lisp files for agda-mode type
+ agda-mode locate
+in your terminal.
+
+--------------
+-- Features --
+--------------
+
 Features started so far:
+
 1) A simple lemma database support (see LemmaDatabaseTutorial.lagda)
 2) A few functions for creating a with expression by writing it inside a goal (see WithClausesTutorial.lagda)
+
+Smaller features:
+
+1) generating a function body stub based on type signature:
+
+   Example:
+
+   given
+
+   plus : Nat -> Nat -> Nat  -- cursor on this line or on the one below
+   
+   press C-c g to get
+
+   plus : Nat -> Nat -> Nat
+   plus x x' = ?
+
+   with the cursor placed in the new goal.
+
+2) deleting a broken pattern declaration and inserting '... | '
+   * this is useful when Agda has generated an invalid pattern after matching on a variable that binds the
+   result of a pattern matching. Pressing C-c C-x C-f (f for "fix") will replace the function name and all patterns
+   that weren't introduced by the last with-expression with an "... | ". This is often sufficent to make the file
+   type-check successfully.
+
+   Example:
+
+   given
+ 
+   equal? : Nat -> Nat -> Bool
+   equal? n m with n \?= m
+   equal? n m | yes p = true   -- line A
+   equal? n m | no ~p = false  -- line B
+
+   placing the cursor on line A and firing C-c C-x C-f and then doing the same for line B will yield
+
+   equal? : Nat -> Nat -> Bool
+   equal? n m with n \?= m
+   ... | yes p = true  
+   ... | no ~p = false

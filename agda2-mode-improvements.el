@@ -469,6 +469,43 @@ first clause."
        (indent   (agda2-extract-indentation upto-end)))
     (delete-region (line-beginning-position) end-point)
     (insert indent "...")))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; [] Normal agda indent with possibility of indent region
+
+;; precond : region is active
+(defun agda2-indent-region (start end)
+  (interactive "r")
+  (let ((last-line (line-number-at-pos end)))
+    (goto-char start)
+    (while (< (line-number-at-pos) last-line)
+      (beginning-of-line)
+      (eri-indent)
+      (next-line))))
+
+(defun agda2-indent-reverse-region (start end)
+  (interactive "r")
+  (let ((last-line (line-number-at-pos end)))
+    (goto-char start)
+    (while (< (line-number-at-pos) last-line)
+      (beginning-of-line)
+      (eri-indent-reverse)
+      (next-line))))
+
+(defun agda2-indent ()
+  (interactive)
+  (setf mark-even-if-inactive nil)
+  (if (region-active-p)
+      (call-interactively 'agda2-indent-region)
+    (eri-indent)))
+
+
+(defun agda2-indent-reverse ()
+  (interactive)
+  (setf mark-even-if-inactive nil)
+  (if (region-active-p)
+      (call-interactively 'agda2-indent-reverse-region)
+    (eri-indent-reverse)))
     
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Agda-mode improvements definitions end here

@@ -245,10 +245,10 @@ constituents.")
     (agda2-goal-and-context-and-inferred     ,(kbd "C-c C-.")   (local)        "Goal type, context and inferred type")
     (agda2-module-contents-maybe-toplevel    ,(kbd "C-c C-o")   (local global) "Module contents")
     (agda2-compute-normalised-maybe-toplevel "\C-c\C-n"         (local global) "Evaluate term to normal form")
-    (eri-indent                  ,(kbd "TAB"))
-    (eri-indent-reverse          [S-iso-lefttab])
-    (eri-indent-reverse          [S-lefttab])
-    (eri-indent-reverse          [S-tab])
+    ;(eri-indent                  ,(kbd "TAB"))
+    ;(eri-indent-reverse          [S-iso-lefttab])
+    ;(eri-indent-reverse          [S-lefttab])
+    ;(eri-indent-reverse          [S-tab])
     (agda2-goto-definition-mouse [mouse-2])
     (agda2-goto-definition-keyboard "\M-.")
     (agda2-go-back                  "\M-*")
@@ -263,6 +263,12 @@ constituents.")
     (agda2-generate-function-stub "\C-cg" (global) "Generate a function stub from type declaration.")
     ;; fix line
     (agda2-fix-line "\C-c\C-x\C-f" (global) "Try to fix a line with broken patterns by changing them to ...")
+    ;; my indentation
+    (agda2-indent                  ,(kbd "TAB"))
+    (agda2-indent-reverse          [S-iso-lefttab])
+    (agda2-indent-reverse          [S-lefttab])
+    (agda2-indent-reverse          [S-tab])
+    
     )
   "Table of commands, used to build keymaps and menus.
 Each element has the form (CMD &optional KEYS WHERE DESC) where

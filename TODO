@@ -1,0 +1,15 @@
+[ ] 1. Test the features created so far
+[ ] 2. Fix the indentation stuff (rewrite it by hand - it doesn't work yet)
+[ ] 3. Extract the goal into a where clause
+[ ] 4. Create a mechanism for convenient working with equational proofs
+    i.e. to nicely format
+      lem (suc n) m = begin suc (n + m) ≡⟨ cong suc (lem n m) ⟩ suc (m + n) ≡⟨ lem2 m n ⟩ (m + suc n ∎)
+    which was auto-generated.
+
+
+BUGS:
+[ ] 1. With expr: C[XCW] will always split on cond0, even if it was introduced much earlier
+[ ] 2. With expr: C-X|U C-x C-w will copy the previous pattern when current like begins with ... | condX = ? 
+       and make agda complain about repeated variables.
+[ ] 3. DB: Using imports has not nice behavior when working with emacs as a server...
+       This happens when the file we import from is already opened.

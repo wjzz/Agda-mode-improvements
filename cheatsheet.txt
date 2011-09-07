@@ -1,0 +1,26 @@
+***************************************************************
+*  A list of all keybindings added by agda-mode-improvements  *
+***************************************************************
+
+A [G] annotation means that the given command works only inside goals
+
+
+** theorem databases **
+
+C-c C-v         -- [G] invoke auto with the contents of the given databases (if none given the uses the db named 'global')
+C-c C-x C-s     -- shows the contents of all DBs in the mini-buffer
+C-u C-c C-x C-s -- shows the contents of all DBs in the mini-buffer along with types (needs an patched agda)
+
+** creating with expressions from goal **
+
+C-c C-w         -- [G] create with expression with ... as LHS
+C-u C-c C-w     -- [G] create with expression with LHS repeated from current line
+C-x C-c C-w     -- [G] create with expression and perform case analysis on the first 
+
+** minor stuff **
+
+C-c C-x C-f     -- replace the LHS with '...' (useful for situations where Agda messes up the patterns)
+
+C-C g           -- generate the LHS of a function based on the signature (which should end above the current line)
+
+TAB / Shift TAB -- indent/unindent a marked region
